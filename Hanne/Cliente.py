@@ -50,8 +50,12 @@ class Cliente:
             elif txt == "bye":
                 break
             else:
-                self.enviar(txt)
-                print("Eco:", self.recibir())
+                try:
+                    self.enviar(txt)
+                    print("Eco:", self.recibir())
+                except socket.error: # no entiendo lo de este error. no sale error al enviar pero al leer sale un error. deberia entregar un timeout. no entiendo
+                    print("Servidor fuera de servicio")
+                    break
         self.desconectar()
 
     # version inicial. todo en una sola funcion
