@@ -1,32 +1,32 @@
 # coding: utf8
-import sys
+import sys # solo para la linea de abajo
 sys.path.append("") # toco hacer esto, porque no importaba los archivos Peer y Mensaje
 import socket
-import select
-import queue
-import threading
-import time
+import select # usar funcion select
+import queue  # cola de mensajes
 from Peer import Peer
 from Mensaje import Mensaje
 
 # Implementacion de un nodo de la red
 class Nodo(object):
+    # constructor
     def __init__(self, nnombre, npuerto, nlinks):
-        self.nombre = nnombre
-        self.puerto = npuerto
-        self.server = None
-        self.peers = []
-        self._msg = queue.Queue()
-        self._old = []
-
+        self.nombre = nnombre     # nombre del nodo, es un numero que sirve como id, debe ser unico para cada nodo
+        self.puerto = npuerto     # puerto por donde recibe las conexiones entrantes. parte servidor
+        self.server = None        # socket para modo servidor
+        self.peers = []           # lista de peers (osea sockets encapsulados). un peer fijo es uno al que debe reconectarse
+        self._msg = queue.Queue() # cola de mensajes para procesar
+        self._old = []            # historico de mensajes recibidos.
+        # los puertos 'nlinks' se vuelven peers fijos
         for l in nlinks:
             tp = Peer()
             tp.puerto = l
             tp.es_fijo = True
             self.peers.append(tp)
        
-    # de un vector de socket, retorna un vector con sus respectivos peers
-    def __to_Peer(self, v):
+
+    # convierte un vector de socket en un vector con sus respectivos peers
+    def _to_Peer(self, v):
         res = []
         for i in v:
             if i is self.server:
@@ -38,35 +38,47 @@ class Nodo(object):
                     break
         return res
 
-    # crea un vector con los sockets activos y el socket servidor
-    def __to_Vector(self):
-        res = [self.server]
-        for p in self.peers:
+
+    # crea un vector con los sockets activos y el socket servidor (esto para la funcion select)
+    def _to_Vector(self):
+        res = [self.server]  # agrega el socket servidor
+        for p in self.peers: # recorre los peers y agrega el socket. si el peer no esta conectado lo ignora
             if p.socket is not None:
                 res.append(p.socket)
         return res
 
+
     # revisa si un mensaje ya habia llegado antes
     def _mensaje_existe(self, ms):
         for m in self._old:
-            if m.id == ms.id:
+            if m == ms.id:
                 return True
         return False
 
+
     # envia un mensaje a todos los peers menos al que entrego el mensaje
     def _repartir_mensaje(self, ms):
-        c = 0
+        c = 0 # contador de peer al que se envia un mensaje
         for p in self.peers:
-            if p.nombre != ms.entregado_por:
+            if p.nombre != ms.entregado_por: # no envia al peer que lo entrego
                 p.enviar(ms.to_json())
                 c += 1
-        return (c > 0)
+        return (c > 0) # si almenos se envio a un peer
+
+
+    # envia un mensaje a la red
+    def agregar_mensaje(self, destino, texto):
+        ms = Mensaje(ndestino=destino, norigen=self.nombre, ncontenido=texto)
+        ms.set_id(self.nombre) # crea un id unico para el mensaje
+        self._msg.put(ms) # lo agrega a la cola de mensajes
+
 
     # inicia el servidor
     def escuchar(self):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind(('127.0.0.1', self.puerto))
         self.server.listen(5)
+
 
     # desconecta todos los sockets
     def detener(self):
@@ -78,6 +90,8 @@ class Nodo(object):
             p.desconectar()
         self.peers = None
 
+
+    # funcion principal del nodo, es la que realiza toda la magia
     def procesar(self):
         # Se reconectan los nodos originales (los que se entregaron como parametros)
         for i in self.peers:
@@ -85,12 +99,12 @@ class Nodo(object):
                 i.conectar(self.nombre)
 
         # revisamos que nodos enviaron algo, o generaron error (se cerraron)
-        inp = self.__to_Vector();
+        inp = self._to_Vector();
         rr, rw, er = select.select(inp, [], inp, 0.5)  # reviso si alguno de los clientes escribio algo
 
         # revisar sockets que tienen errores
         if len(er) > 0: # si hay algun socket con error
-            rw = self.__to_Peer(er) # obtenemos los peers que generaron error
+            rw = self._to_Peer(er) # obtenemos los peers que generaron error
             for e in rw: # recorrer los peers
                 if e is None: # error en el socket servidor
                     print('Error en Servidor, Se detiene.')
@@ -102,7 +116,7 @@ class Nodo(object):
 
         # revisar socket que enviaron datos
         if len(rr) > 0: # si hay algun socket envio datos
-            rw = self.__to_Peer(rr) # obtenemos los peers que generaron error
+            rw = self._to_Peer(rr) # obtenemos los peers que generaron error
             for s in rw: # recorrer los peers
                 if s is None: # nuevo cliente conectado
                     stream, addr = self.server.accept()
@@ -116,116 +130,20 @@ class Nodo(object):
                         print(' > [msg ' + ms.id + '] Cartero ' + str(s.nombre))
 
         # procesamos los mensajes recibidos
-        while self._msg.qsize() > 0:
-            ms = self._msg.get()
-            if self._mensaje_existe(ms):
-                print(' > [msg ' + ms.id + '] Repetido')
+        while self._msg.qsize() > 0: # si hay algun mensaje por procesar
+            ms = self._msg.get() # obtenemos un mensaje de la cola
+            if self._mensaje_existe(ms): # revisamos si ya habia llegado
+                print(' > [msg ' + ms.id + '] Repetido') # mensaje repetido. el mensaje muere aqui.
             else:
-                self._old.append(ms)
-                if ms.destino == self.nombre:
-                    print(' > [msg ' + ms.id + '] De ' + str(ms.origen) + ', ' + ms.contenido)
-                elif self._repartir_mensaje(ms):
-                    if ms.origen == self.nombre:
-                        print(' > [msg ' + ms.id + '] Enviado')
+                # el mensaje es nuevo
+                self._old.append(ms.id) # agregamos al historico de mensajes
+                if ms.destino == self.nombre: # revisamos si es para este nodo
+                    print(' > [msg ' + ms.id + '] De ' + str(ms.origen) + ', ' + ms.contenido) # somos el destinatario
+                elif self._repartir_mensaje(ms): # se envia el mensaje a los peers
+                    # si se logra enviar almenos a uno peer
+                    if ms.origen == self.nombre: # revisamos si es un mensaje que creamos
+                        print(' > [msg ' + ms.id + '] Enviado') # mensaje nuestro
                     else:
-                        print(' > [msg ' + ms.id + '] Re-enviado')
+                        print(' > [msg ' + ms.id + '] Re-enviado') # mensaje de otro nodo
                 else:
-                    print(' > [msg ' + ms.id + '] Fin Camino')
-
-    # envia un mensaje a la red
-    def agregar_mensaje(self, destino, texto):
-        ms = Mensaje(ndestino=destino, norigen=self.nombre, ncontenido=texto)
-        ms.set_id(self.nombre)
-        self._msg.put(ms)
-
-
-h_continuar = True
-h_mensaje = None
-def teclado():
-    global h_continuar
-    global h_mensaje
-
-    while h_continuar:
-        txt = input()
-        if txt == '#1':
-            h_continuar = False
-        else:
-            txt = txt.split(" ", 1)
-            try: 
-                txt[0] = int(txt[0])
-                h_mensaje = (txt[0], txt[1])
-            except ValueError:
-                pass
-
-# ============================== MAIN ==================================
-def main():
-    global h_continuar
-    global h_mensaje
-
-    cod = int(sys.argv[1])
-    n = None
-
-    if cod == 201:
-        n = Nodo(1, 18001, [])
-    elif cod == 202:
-        n = Nodo(2, 18002, [18001])
-
-    elif cod == 301:
-        n = Nodo(1, 18001, [])
-    elif cod == 302:
-        n = Nodo(2, 18002, [18001, 18003])
-    elif cod == 303:
-        n = Nodo(3, 18003, [])
-
-    else:
-        return # si no es valido
-
-
-    print('Nodo ' + str(n.nombre) + ' - ' + str(n.puerto))
-    time.sleep(5) # un tiempo para iniciar todos los nodos
-    n.escuchar()
-    print('Escuchando')
-    print('Escribir #1 para salir')
-
-    # iniciar escucha del teclado
-    hilo = threading.Thread(target=teclado, name='teclado', daemon=True)
-    hilo.start()
-
-    # ciclo de trabajo nodo
-    while h_continuar:
-        # revisamos si hay mensaje para enviar
-        if h_mensaje is not None:
-            n.agregar_mensaje(h_mensaje[0], h_mensaje[1])
-            h_mensaje = None
-        # procesamos el nodo
-        n.procesar()
-        time.sleep(0.25)   
-
-    # fin
-    n.detener()
-    print('bye bye.')
-
-
-# llamado al Main
-main()
-
-#import threading
-#threadLock = threading.Lock()
-#with threadLock:
-#    global_counter += 1
-
-#[Manejo de sincronizacion]
-#http://effbot.org/zone/thread-synchronization.htm
-
-#[Modos de controlar el input sin bloquear]
-#https://stackoverflow.com/questions/5404068/how-to-read-keyboard-input
-#https://stackoverflow.com/questions/2408560/python-nonblocking-console-input
-
-#[Convertir entero a bytes y viceversa]
-#https://docs.python.org/3/library/stdtypes.html#int.to_bytes
-
-#[Convertir a Json]
-#https://docs.python.org/3.4/library/json.html#module-json
-
-#[Serializacion]
-#https://docs.python.org/3.4/library/pickle.html
+                    print(' > [msg ' + ms.id + '] Fin Camino') # no hay mas peers a quien enviarlo. el mensaje muere aqui.

@@ -5,12 +5,12 @@ import socket
 class Peer(object):
     # constructor
     def __init__(self):
-        self.es_fijo = False
-        self.socket = None
-        self.puerto = 0
-        self.nombre = 0
+        self.es_fijo = False # si es un peer fijo. es decir debe reconectarse
+        self.socket = None   # socket de comunicacion con el peer
+        self.puerto = 0      # puerto para la comunicacion. es solo para los fijos
+        self.nombre = 0      # codigo del peer. esto lo envia al iniciar la comunicacion
 
-    # procedimiento de la clase, pensado para los vinculos fijos de un nodo
+    # procedimiento de la clase, pensado para los peers que se conectan. osea los no fijos
     @classmethod
     def create_from_socket(cls, socket, nombre):
         nu = Peer()
@@ -19,12 +19,14 @@ class Peer(object):
         nu.nombre = int(nu.recibir()) # recibe el nombre del nodo con el que se conecto
         return nu
         
+
     # Envia un texto por el socket
     def enviar(self, msg):
         v = msg.encode("utf-8")                  # el texto lo convierte a un vector de bytes
         vl = len(v).to_bytes(2, byteorder='big') # obtiene un vector de 2 bytes de la longitud de la cadena
         v = vl + v                               # concatena los dos vectores
         self.socket.sendall(v)                   # envia por el socket
+
 
     # procedimiento privado, recibir una cantidad especifica de bytes
     def __recibir(self, num):
@@ -46,6 +48,7 @@ class Peer(object):
         din = None
         return buff
     
+
     # recibir un texto desde el socket
     def recibir(self):
         din = self.__recibir(2)                        # lee la cabecera, 2 bytes indican el tamaño del envio
@@ -56,22 +59,27 @@ class Peer(object):
         else:
             return None
 
+
     # permite conectar vinculo de tipo fijo
     def conectar(self, nombre):
         if self.es_fijo:
             try:
+                # se inicia la conexion
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.socket.connect(('localhost', self.puerto))
+                # se envia el nombre del nodo
                 self.enviar(str(nombre))
+                # se obtiene el nombre del nodo con el que se conecto
                 self.nombre = int(self.recibir())
             except socket.error:
                 self.socket = None
                 self.nombre = 0
 
+
     # desconectar el nodo
     def desconectar(self):
         try:
-            #self.socket.shutdown(socket.SHUT_RDWR)
+            #self.socket.shutdown(socket.SHUT_RDWR) # sigo sin saber si es necesario
             self.socket.close()
             self.socket = None
             self.nombre = 0
