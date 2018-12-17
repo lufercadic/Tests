@@ -100,7 +100,7 @@ class Nodo(object):
 
         # revisamos que nodos enviaron algo, o generaron error (se cerraron)
         inp = self._to_Vector();
-        rr, rw, er = select.select(inp, [], inp, 0.5)  # reviso si alguno de los clientes escribio algo
+        rr, rw, er = select.select(inp, [], inp, 0.25)  # reviso si alguno de los clientes escribio algo
 
         # revisar sockets que tienen errores
         if len(er) > 0: # si hay algun socket con error
