@@ -9,12 +9,13 @@ Repositorio para todas las pruebas de desarrollo del grupo Santo Domingo.
 > Documentacion de pruebas de Hanne.
 
 ### Projecto Nodo (/Hanne/Nodo)
-Demostraci髇 de una red de nodos interconectados para transmitir mensajes.
-Hice un limpieza completa, de forma que todas las clases sean usadas como un librer韆.
+Demostraci贸n de una red de nodos interconectados para transmitir mensajes.
+
+Hice un limpieza completa, de forma que todas las clases sean usadas como un librer铆a.
 
 #### Cambios:
-* Se agrego el archivo PuntoRed.py que es el Main de la aplicaci髇.
-* En el archivo Nodo.py solo se dejo el c骴igo del nodo. todo el c骴igo de la funci髇 main se paso a PuntoRed.py.
+* Se agrego el archivo PuntoRed.py que es el Main de la aplicaci贸n.
+* En el archivo Nodo.py solo se dejo el c贸digo del nodo. todo el c贸digo de la funci贸n main se paso a PuntoRed.py.
 * La clase Nodo ahora tiene tres eventos para notificar los sucesos que ocurren en la red.
 * Se dejo implementado dos ejemplos de red. de 2 y 3 nodos.
 
@@ -25,6 +26,10 @@ Hice un limpieza completa, de forma que todas las clases sean usadas como un lib
 donde:
 - red: es el tipo de red (1-dos nodos 2-tres nodos)
 - nodo: id del nodo (1, 2 o 3)
+
+Red de dos nodos
+cmd1\> Python PuntoRed.py 1 1
+cmd2\> Python PuntoRed.py 1 2
 ```
 
 ## Luis
