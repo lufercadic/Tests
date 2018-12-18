@@ -17,13 +17,34 @@ class Nodo(object):
         self.peers = []           # lista de peers (osea sockets encapsulados). un peer fijo es uno al que debe reconectarse
         self._msg = queue.Queue() # cola de mensajes para procesar
         self._old = []            # historico de mensajes recibidos.
+        self.evento_error = None  # evento de reportar error. error(string)
+        self.evento_log = None    # evento de nodo, reporta que ocurre con los mensajes procesados. log(int, int, string)
+        self.evento_recibido = None # evento mensaje recibido, entrga el contenido de un mensaje que llego para el nodo. mensaje(int, int, string, int)
         # los puertos 'nlinks' se vuelven peers fijos
         for l in nlinks:
             tp = Peer()
             tp.puerto = l
             tp.es_fijo = True
             self.peers.append(tp)
-       
+
+
+    # permite lanzar el evento error
+    def _onError(self, txt):
+        if self.evento_error is not None:
+            self.evento_error(txt)
+    
+
+    # permite lanzar el evento seguimiento
+    def _onLog(self, msgid, peerid, tipo):
+        if self.evento_log is not None:
+            self.evento_log(msgid, peerid, tipo)
+
+
+    # permite lanzar el evento entregar mensaje
+    def _onMsg(self, msgid, origenid, contenido, peerid):
+        if self.evento_recibido is not None:
+            self.evento_recibido(msgid, origenid, contenido, peerid)
+
 
     # convierte un vector de socket en un vector con sus respectivos peers
     def _to_Peer(self, v):
@@ -107,11 +128,13 @@ class Nodo(object):
             rw = self._to_Peer(er) # obtenemos los peers que generaron error
             for e in rw: # recorrer los peers
                 if e is None: # error en el socket servidor
-                    print('Error en Servidor, Se detiene.')
+                    #print('Error en Servidor, Se detiene.')
+                    self._onError('Error en Servidor, Se detiene.')
                 else: # error en algun socket cliente
                     if not e.es_fijo: # los fijos no se borran de la lista
                         self.peers.remove(e)
-                    print('Error en Cliente ' + str(e.nombre)  + ', Se desconecta.')
+                    #print('Error en Cliente ' + str(e.nombre)  + ', Se desconecta.')
+                    self._onError('Error en Cliente ' + str(e.nombre)  + ', Se desconecta.')
                     e.desconectar()
 
         # revisar socket que enviaron datos
@@ -127,23 +150,29 @@ class Nodo(object):
                     if ms is not None:
                         ms = Mensaje.create_from_json(ms, s.nombre)
                         self._msg.put(ms) # se lee el mensaje y se agrega a la cola
-                        print(' > [msg ' + ms.id + '] Cartero ' + str(s.nombre))
+                        #print(' > [msg ' + ms.id + '] Cartero ' + str(s.nombre))
+                        self._onLog(ms.id, s.nombre, 'recibido') # reporta que mensaje recibido
 
         # procesamos los mensajes recibidos
         while self._msg.qsize() > 0: # si hay algun mensaje por procesar
             ms = self._msg.get() # obtenemos un mensaje de la cola
             if self._mensaje_existe(ms): # revisamos si ya habia llegado
-                print(' > [msg ' + ms.id + '] Repetido') # mensaje repetido. el mensaje muere aqui.
+                #print(' > [msg ' + ms.id + '] Repetido')
+                self._onLog(ms.id, ms.entregado_por, 'repetido') # mensaje repetido. el mensaje muere aqui.
             else:
                 # el mensaje es nuevo
                 self._old.append(ms.id) # agregamos al historico de mensajes
                 if ms.destino == self.nombre: # revisamos si es para este nodo
-                    print(' > [msg ' + ms.id + '] De ' + str(ms.origen) + ', ' + ms.contenido) # somos el destinatario
+                    #print(' > [msg ' + ms.id + '] De ' + str(ms.origen) + ', ' + ms.contenido)
+                    self._onMsg(ms.id, ms.origen, ms.contenido, ms.entregado_por) # somos el destinatario
                 elif self._repartir_mensaje(ms): # se envia el mensaje a los peers
                     # si se logra enviar almenos a uno peer
                     if ms.origen == self.nombre: # revisamos si es un mensaje que creamos
-                        print(' > [msg ' + ms.id + '] Enviado') # mensaje nuestro
+                        #print(' > [msg ' + ms.id + '] Enviado')
+                        self._onLog(ms.id, ms.entregado_por, 'enviado') # mensaje nuestro
                     else:
-                        print(' > [msg ' + ms.id + '] Re-enviado') # mensaje de otro nodo
+                        #print(' > [msg ' + ms.id + '] Re-enviado')
+                        self._onLog(ms.id, ms.entregado_por, 'reenviado') # mensaje de otro nodo
                 else:
-                    print(' > [msg ' + ms.id + '] Fin Camino') # no hay mas peers a quien enviarlo. el mensaje muere aqui.
+                    #print(' > [msg ' + ms.id + '] Fin Camino')
+                    self._onLog(ms.id, ms.entregado_por, 'perdido') # no hay mas peers a quien enviarlo. el mensaje muere aqui.

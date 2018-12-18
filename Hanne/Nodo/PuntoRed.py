@@ -41,6 +41,8 @@ class Intermedio(object):
         self._hilo.start()
 
 
+
+
 # Aqui puse las configuraciones para las redes de ejemplo
 def conf_pre_guardada(grupo, secuencia):
     # si es ejemplo de dos nodos
@@ -60,6 +62,26 @@ def conf_pre_guardada(grupo, secuencia):
     # si no es ninguno de los ejemplos
     raise ValueError("Combinacion de parametros no valida. XP")
 
+# procesa el evento error del nodo
+def funcion_error(txt):
+    print(' > Error: ' + txt)
+
+# procesa el evento log del nodo
+def funcion_log(id, peer, tipo):
+    if tipo == 'recibido':
+        print(' - Msg: ' + str(id) + '  [' + str(peer) + ']  Recibido, listo para procesar.')
+    elif tipo == 'enviado':
+        print(' - Msg: ' + str(id) + '  Nuevo enviado a la red.')
+    elif tipo == 'reenviado':
+        print(' - Msg: ' + str(id) + '  [' + str(peer) + ']  Re-transmitido a la red.')
+    elif tipo == 'repetido':
+        print(' - Msg: ' + str(id) + '  [' + str(peer) + ']  Repetido, se ignora.')
+    elif tipo == 'perdido':
+        print(' - Msg: ' + str(id) + '  [' + str(peer) + ']  Perdido, se ignora.')
+
+# procesa el evento llego mensaje
+def funcion_mensaje(id, origen, contenido, peer):
+    print(' + Msg: ' + str(id) + '  [' + str(peer) + ']  De: ' + str(origen) + ', ' + contenido)
 
 # funcion main. Punto de inicio de la aplicacion
 def main(args):
@@ -73,6 +95,11 @@ def main(args):
         nodo = Nodo(nodo[0], nodo[1], nodo[2])
     else:
         raise ValueError("Numero de parametros no valido. XP")
+
+    # asignamos los controladores de evento
+    nodo.evento_error = funcion_error
+    nodo.evento_log = funcion_log
+    nodo.evento_recibido = funcion_mensaje
 
     # creamos el lector de la consola
     con = Intermedio("#1")
