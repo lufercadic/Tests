@@ -57,8 +57,8 @@ def hilo():
     print("URL: ", nodo.url, nodo.port)
     print("")
 
-    nodo.nodo_irsaludar('127.0.0.1', 8081)
-    nodo.nodo_irsaludar('127.0.0.1', 8083)
+    nodo.nodo_irsaludar('127.0.0.1', 18081)
+    nodo.nodo_irsaludar('127.0.0.1', 18083)
     
     while True:
         nodo.procesar()
@@ -68,7 +68,7 @@ def hilo():
 #Funcion principal
 def main(args):
     global nodo
-    args = [0, 2, 8082] # los queme esta vez
+    args = [0, 2, 18082] # los queme esta vez
     nodo = Nodo(args[1], '127.0.0.1', args[2])
     threading.Thread(target=hilo, name='teclado', daemon=True).start()
     app.run(host="0.0.0.0", port=nodo.port)

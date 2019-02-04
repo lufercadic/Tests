@@ -64,7 +64,7 @@ def hilo():
 #Funcion principal
 def main(args):
     global nodo
-    args = [0, 1, 8081] # los queme esta vez
+    args = [0, 1, 18081] # los queme esta vez
     nodo = Nodo(args[1], '127.0.0.1', args[2])
     threading.Thread(target=hilo, name='teclado', daemon=True).start()
     app.run(host="0.0.0.0", port=nodo.port)

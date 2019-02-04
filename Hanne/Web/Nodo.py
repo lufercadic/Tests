@@ -30,7 +30,7 @@ class Nodo(object):
     def _enviar_otro_nodo(self, nd, js):
         try:
             requests.get('http://{}:{}/servidor/enviar/{}/{}'.format(nd[1], nd[2], self.nombre, js))
-        except:
+        except Exception as e:
             pass
 
 
@@ -87,8 +87,8 @@ class Nodo(object):
             r.connection.close()
             if r.status_code == 200:
                 res = r.json()
-                self.nodo_registrar(res.nodo, url, puerto)
-        except:
+                self.nodo_registrar(res["nodo"], url, puerto)
+        except Exception as e:
             pass
         
 
