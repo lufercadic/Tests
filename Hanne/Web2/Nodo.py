@@ -15,10 +15,10 @@ import time # para poder usar el sleep
 # Implementacion de un nodo de la red
 class Nodo(object):
     # constructor
-    def __init__(self, nid, nurl, nport):
-        self.idnodo = nid      # codigo identificador del nodo
-        self.url = nurl        # url del servidor
-        self.port = nport      # puerto por el que escucha el servidor
+    def __init__(self):
+        self.idnodo = ""       # codigo identificador del nodo
+        self.url = "localhost" # url del servidor
+        self.port = 18001      # puerto por el que escucha el servidor
         self.tokens = []       # listado de tokens pendientes
         self.peers = {}        # lista de peers (osea servidores/nodos)
         self.users = {}        # lista de clientes
@@ -479,6 +479,22 @@ class Nodo(object):
         try:
             print("Configuracion", "{}.cfg".format(nombre))
             self.cfg = Configuracion.file_create("{}.cfg".format(nombre))
+            self.idnodo = self.cfg.id
+            self.url = self.cfg.url
+            self.port = self.cfg.puerto
+            return True
+        except:
+            print("Configuracion", "Hubo un error.")
+            return False
+
+    def CrearConf(self, nombre):
+        try:
+            print("Configuracion", "{}.cfg".format(nombre))
+            c = Configuracion()
+            c.nuevo_id()
+            c.semillas.append(("127.0.0.1", 18002))
+            c.semillas.append(("127.0.0.1", 18003))
+            c.file_write("{}.cfg".format(nombre))
             return True
         except:
             print("Configuracion", "Hubo un error.")
@@ -490,7 +506,7 @@ class Nodo(object):
         Thread(target=self.Procesar, name='trabajandito', daemon=True).start()
 
     def Finalizar(self):
-        pass #aqui guardaria la conf
+        pass #aqui guardaria la conf, los peers, los users
 
 
 

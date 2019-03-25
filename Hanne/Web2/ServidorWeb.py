@@ -9,10 +9,8 @@ import time         # para poder usar el sleeo
 import requests
 
 # datos globales
-nodo = None
+nodo = Nodo()
 app = Flask(__name__)
-
-nodo = Nodo("111-111-111", "localhost", 8082)
 
 
 # FUNCIONES CONTROLADOR WEB
@@ -99,38 +97,20 @@ def client_box():
         return '', key
 
 
-
-
-
-
-# FUNCIONES APLICACION
-def hilo():
-    time.sleep(2)
-    print("")
-    print("Servidor: ", nodo.nombre)
-    print("URL: ", nodo.url, nodo.port)
-    print("")
-    while True:
-        nodo.procesar()
-        time.sleep(0.25)
-
-
 #Funcion principal
 def main(args):
     #global nodo
-    #args = [0, 1, 18081] # los queme esta vez
-    #nodo = Nodo(args[1], '127.0.0.1', args[2])
-    #threading.Thread(target=hilo, name='teclado', daemon=True).start()
-    if len(args) > 1:
-        r = requests.post("http://localhost:8082/post", data={"key": "llavesita"})
-        print(r.text)
-    else:
-        app.run(host="0.0.0.0", port=8082)#nodo.port)
+    if(len(args) == 2):
+        if(args[1] == "cfg"):
+            nodo.CrearConf("ejemplo")
+        else:
+            if(nodo.Iniciar(args[1])):
+                nodo.Trabajar()
+                app.run(host=nodo.url, port=nodo.port)
+                nodo.Finalizar()
     
 if __name__ == "__main__":
 	main(sys.argv)
-
-
 
 
 #Crear Token
