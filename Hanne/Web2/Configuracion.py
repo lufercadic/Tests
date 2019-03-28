@@ -67,5 +67,5 @@ class Configuracion(object):
     @classmethod
     def file_create(self, path):
         c = Configuracion()
-        c.file_read(js)
+        c.file_read(path)
         return c

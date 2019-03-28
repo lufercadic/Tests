@@ -127,7 +127,7 @@ class Utiles(object):
 
     # Calcula el SHA256 para un vector
     @classmethod
-    def sha256_generar_str(cls, data):
+    def sha256_generar(cls, data):
         return SHA256.new(data).digest()
 
     ####################################################################################
