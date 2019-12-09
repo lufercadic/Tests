@@ -1,0 +1,13 @@
+<LogoutScreen>:
+  BoxLayout:
+    orientation: 'vertical'
+    Label:
+      text: "Deseas Salir?"
+      color: 0,0,0,1
+    Button:
+      id: signout
+      text: "Sign-Out"
+      on_release: root.sigout_button()
+    Button:
+      text: "Cancel"
+      on_release: root.cancel_button()

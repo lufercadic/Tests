@@ -1,0 +1,32 @@
+<FileScreen>:
+  BoxLayout:
+    orientation: 'vertical'
+    
+    Label:
+      text: "Drop or select your file"
+      color: 0,0,0,1
+      size_hint_y: None
+      height: 30
+     
+    BoxLayout: # toco hacer esto para poner el fondo negro
+      canvas.before:
+        Color: 
+          rgb: 0, 0, 0
+        Rectangle: 
+          pos: self.pos 
+          size: self.size 
+      FileChooserIconView:
+        id: filechooser
+        filters: ['*.csv']
+        multiselect: False
+        path: 'E:\WebServer8080\Domingo\Tests\Hanne\Kivy1'
+        on_selection: root.select(*args)
+      
+    Label:
+      id: pfile
+      text: "FileScreen"
+      color: 0,0,0,1
+      
+    Button:
+      text: 'Next'
+      on_release: root.next()

@@ -1,0 +1,24 @@
+<LoginScreen>:
+  BoxLayout:
+    orientation: 'vertical'
+    Label:
+      text: "User:"
+      color: 0,0,0,1
+    TextInput:
+      id: login
+      multiline: False
+    Label:
+      text: "Password:"
+      color: 0,0,0,1
+    TextInput:
+      id: pass
+      multiline: False
+      password: True
+    Label:
+      id: msg
+      text: ""
+      color: 1,0,0,1
+    Button:
+      id: signin
+      text: "Sign In"
+      on_release: root.sigin_button()

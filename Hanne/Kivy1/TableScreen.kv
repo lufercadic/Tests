@@ -1,0 +1,19 @@
+<TableScreen>:
+  BoxLayout:
+    orientation: 'vertical'
+    Label:
+      text: "Choose Proyect"
+      color: 0,0,0,1
+      size_hint_y: None
+      height: 25
+    Spinner:
+      id: project
+      size_hint_y: None
+      height: 25
+      #text: 'Home'
+      #values: 'Home', 'Work', 'Other', 'Custom'
+      on_text: root.proyect(self.text)
+    Label:
+      id: salida
+      text: "TableScreen"
+      color: 0,0,0,1

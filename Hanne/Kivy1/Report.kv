@@ -1,0 +1,162 @@
+<MyBoxLayout>:
+  canvas:
+    Color:
+      rgba: 0.92, 0.94, 0.96, 1
+    Rectangle:
+      pos: self.pos
+      size: self.size
+  id: papa
+  orientation: 'vertical'
+  padding: 0
+  spacing: 0
+  color: 0,0,0,1
+  
+  # ========== Area del titulo
+  BoxLayout:
+    canvas:
+      Color:
+        rgba: 0.23, 0.55, 0.74, 1
+      Rectangle:
+        pos: self.pos
+        size: self.size
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: 50
+    
+    Label:
+      id: titleleft
+      canvas.before:
+        Color:
+          rgba: 0.21, 0.5, 0.66, 1
+        Rectangle:
+          pos: self.pos
+          size: self.size
+      size_hint_x: None
+      width: 230
+      text: 'REDRep'
+      color: 1,1,1,1
+      bold: True
+      
+    Label:
+      id: titleright
+      text: 'Aun no se que poner aqui'
+      color: 1,1,1,1
+      bold: True
+  
+  # ========== Area menu y contenido
+  GridLayout:
+    rows: 1
+    cols: 2
+    spacing: 0
+    
+    # ========== Area menu
+    StackLayout:
+      canvas.before:
+        Color:
+          rgba: 0.13, 0.18, 0.2, 1
+        Rectangle:
+          pos: self.pos
+          size: self.size
+    
+      id: leftpanel
+      #orientation: 'vertical'
+      size_hint_x: None
+      width: 230
+      
+      
+      Widget:
+        size_hint_y: None
+        height: 30
+        
+      
+      Image:
+        id: img
+        source: 'img/User0.png'
+        size_hint_y: None
+        height: 100
+        opacity: 1
+        
+      Label:
+        id: username
+        text: '[b]REDPor[/b]'
+        size_hint_y: None
+        height: 50
+        markup: True
+        halign: 'center'
+        opacity: 1        
+        
+      Label:
+        text: 'Opciones Izquierda'
+        size_hint_y: None
+        height: 40        
+      Button:
+        text: 'Sign In'
+        on_release: root.go_login()
+        size_hint_y: None
+        height: 40
+      Button:
+        text: 'Choose File'
+        on_release: root.go_file()
+        size_hint_y: None
+        height: 40
+      Button:
+        text: 'Data Example'
+        on_release: root.go_table()
+        size_hint_y: None
+        height: 40
+      Button:
+        text: 'Generate Report'
+        on_release: contentpanel.current = 'export'
+        size_hint_y: None
+        height: 40
+      Button:
+        text: 'Settings'
+        on_release: contentpanel.current = 'settings'
+        size_hint_y: None
+        height: 40
+      Button:
+        text: 'Sign Out'
+        on_release: contentpanel.current = 'logout'
+        size_hint_y: None
+        height: 40
+    
+    # ========== Area contenido
+    ScreenManager:
+      id: contentpanel
+      padding: 0
+      spacing: 0
+            
+      LoginScreen:
+        name: 'login'
+        manager: contentpanel
+        root: papa
+        
+      LogoutScreen:
+        name: 'logout'
+        manager: contentpanel
+        root: papa
+        
+      FileScreen:
+        name: 'file'
+        manager: contentpanel
+        root: papa
+        
+      TableScreen:
+        id: screentable
+        name: 'table'
+        manager: contentpanel
+        root: papa
+        
+      ExportScreen:
+        name: 'export'
+        manager: contentpanel
+        root: papa
+        
+      SettingScreen:
+        name: 'settings'
+        manager: contentpanel
+        root: papa
+        
+      Screen:
+        name: 'index'
+    
